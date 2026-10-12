@@ -1,5 +1,12 @@
 name: Champion rotation C/D monitor
 on:
+  push:
+    branches: [main]
+    paths:
+      - "champion_rotation/monitor.py"
+      - "champion_rotation/test_monitor.py"
+      - "champion_rotation/requirements.txt"
+      - ".github/workflows/champion-rotation.yml"
   schedule:
     # 23:30 UTC = 19:30 ET during daylight saving, 18:30 ET in winter.
     - cron: "30 23 * * 1-5"
