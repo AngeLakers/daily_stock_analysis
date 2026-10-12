@@ -131,7 +131,7 @@ Yahoo Finance via yfinance is unofficial and may be delayed or revised. Prices u
         # GitHub Actions creates an issue only for new changes; no auto-order.
         import subprocess
         title = f"Review champion target change — {day}"
-        subprocess.run(["gh", "issue", "create", "--title", title, "--body-file", str(REPORT), "--label", "champion-alert"], check=False)
+        subprocess.run(["gh", "issue", "create", "--title", title, "--body-file", str(REPORT)], check=False)
 
 if __name__ == "__main__":
     main()
