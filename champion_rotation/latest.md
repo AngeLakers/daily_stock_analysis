@@ -2,10 +2,10 @@
 
 Research-only, **not** a buy/sell instruction. Signals are calculated after a completed US market session. A changed TARGET is **not a filled order**.
 
-- Model allocation: **USD $200 per strategy**, independent shadow portfolios; no trades have been simulated or executed.
+- Model allocation: **USD $100 per strategy** (**USD $200 total**), independent shadow portfolios; no trades have been simulated or executed.
 - Current membership: 503 names. **Survivorship bias** applies to retrospective use; delisted names are missing.
-- C: YTD adjusted-price winner, 5 percentage-point lead, **3 consecutive qualifying trading sessions**. INITIAL TARGET (not an execution). Tracking target: **MRNA**.
-- D: trailing 252-session adjusted-price winner, reviewed **once per US trading week**, 5 percentage-point lead. INITIAL TARGET (not an execution). Tracking target: **SNDK**.
+- C: YTD adjusted-price winner, 5 percentage-point lead, **3 consecutive qualifying trading sessions**. ALREADY CHECKED. Tracking target: **MRNA**.
+- D: trailing 252-session adjusted-price winner, reviewed **once per US trading week**, 5 percentage-point lead. ALREADY CHECKED. Tracking target: **SNDK**.
 - Do not infer profitability from changing targets. Initial TARGET does not imply you already hold the stock.
 
 ## C: YTD leaders
