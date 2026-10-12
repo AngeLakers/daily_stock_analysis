@@ -15,7 +15,7 @@ STATE = ROOT / "state.json"
 REPORT = ROOT / "latest.md"
 HEADERS = {"User-Agent": "ChampionRotationResearch/1.0 (educational market monitor)"}
 BUFFER = 5.0  # percentage points
-START_BALANCE = 200.0
+START_BALANCE = 100.0
 
 def universe() -> list[str]:
     """Current SP500 only. Historical membership is NOT reconstructed."""
@@ -143,7 +143,7 @@ def main():
 
 Research-only, **not** a buy/sell instruction. Signals are calculated after a completed US market session. A changed TARGET is **not a filled order**.
 
-- Model allocation: **USD ${START_BALANCE:.0f} per strategy**, independent shadow portfolios; no trades have been simulated or executed.
+- Model allocation: **USD ${START_BALANCE:.0f} per strategy** (**USD ${2 * START_BALANCE:.0f} total**), independent shadow portfolios; no trades have been simulated or executed.
 - Current membership: {len(members)} names. **Survivorship bias** applies to retrospective use; delisted names are missing.
 - C: YTD adjusted-price winner, 5 percentage-point lead, **3 consecutive qualifying trading sessions**. {message_c}. Tracking target: **{new_c['target']}**.
 - D: trailing 252-session adjusted-price winner, reviewed **once per US trading week**, 5 percentage-point lead. {message_d}. Tracking target: **{new_d['target']}**.
