@@ -168,19 +168,35 @@ Yahoo Finance via yfinance is unofficial and may be delayed or revised. Prices u
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as out:
             out.write(result)
     if notify:
-        # Initial target also produces a notification, but no trade is implied.
+        # Missing GitHub Issues must not erase or invalidate a valid market signal.
         import subprocess
-        title = f"Review S&P 500 champion C/D signal — {day}"
-        check = subprocess.run(
-            ["gh", "issue", "list", "--state", "all", "--search", f'"{title}" in:title',
-             "--json", "title", "--limit", "100"],
-            capture_output=True, text=True, check=True,
-        )
-        if not any(item.get("title") == title for item in json.loads(check.stdout)):
-            subprocess.run(
-                ["gh", "issue", "create", "--title", title, "--body-file", str(REPORT)],
-                check=True,
+        repo = os.getenv("GH_REPO") or os.getenv("GITHUB_REPOSITORY")
+        if not os.getenv("GITHUB_ACTIONS") or not repo:
+            print("Initial/changed target: see report; local runs do not send notifications.")
+        else:
+            resp = requests.get(
+                f"https://api.github.com/repos/{repo}",
+                headers={"Authorization": f"Bearer {os.getenv('GH_TOKEN', '')}",
+                         "Accept": "application/vnd.github+json"},
+                timeout=20,
             )
+            resp.raise_for_status()
+            if not resp.json().get("has_issues", False):
+                print("::warning::GitHub Issues disabled. Signal saved to report; "
+                      "enable repository Issues in Settings > General to receive notifications.")
+            else:
+                title = f"Review S&P 500 champion C/D signal — {day}"
+                check = subprocess.run(
+                    ["gh", "issue", "list", "--state", "all", "--search",
+                     f'"{title}" in:title', "--json", "title", "--limit", "100"],
+                    capture_output=True, text=True, check=True,
+                )
+                if not any(item.get("title") == title for item in json.loads(check.stdout)):
+                    subprocess.run(
+                        ["gh", "issue", "create", "--title", title,
+                         "--body-file", str(REPORT)],
+                        check=True,
+                    )
 
 if __name__ == "__main__":
     main()
