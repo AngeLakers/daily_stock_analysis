@@ -3,8 +3,10 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from datetime import datetime, timezone
+from io import StringIO
+from datetime import datetime, timedelta
 import pandas as pd
+import exchange_calendars as xcals
 import requests
 import yfinance as yf
 
@@ -20,7 +22,7 @@ def universe() -> list[str]:
     url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
     response = requests.get(url, headers=HEADERS, timeout=30)
     response.raise_for_status()
-    frames = pd.read_html(response.text)
+    frames = pd.read_html(StringIO(response.text))
     table = next((t for t in frames if "Symbol" in t.columns and "Security" in t.columns), None)
     if table is None or len(table) < 450:
         raise RuntimeError("S&P 500 member list unavailable or incomplete: fail closed")
@@ -65,7 +67,7 @@ def rankings(close: pd.DataFrame) -> tuple[pd.Series, pd.Series, str]:
     # A current constituent may have been recently listed: never substitute missing prices.
     return ytd.replace([float("inf"), -float("inf")], float("nan")).dropna().sort_values(ascending=False), rolling.replace([float("inf"), -float("-inf")], float("nan")).dropna().sort_values(ascending=False), end.strftime("%Y-%m-%d")
 
-def transition(old: dict, rank: pd.Series, key: str, day: str, weekly: bool) -> tuple[dict, str]:
+def transition(old: dict, rank: pd.Series, key: str, day: str, weekly: bool, previous_session: str | None = None) -> tuple[dict, str]:
     """Outputs research TARGET, not an executed position."""
     leader = str(rank.index[0])
     target = old.get("target")
@@ -73,9 +75,15 @@ def transition(old: dict, rank: pd.Series, key: str, day: str, weekly: bool) -> 
         return {"target": leader, "candidate": None, "streak": 0, "date": day}, "INITIAL TARGET (not an execution)"
     if old.get("date") == day:
         return old, "ALREADY CHECKED"
-    # A weekly check occurs only on Monday (US/Eastern schedule).
-    if weekly and pd.Timestamp(day).weekday() != 0:
-        return {**old, "date": day}, "HOLD TARGET (weekly review on Monday)"
+    # D: first completed US trading session observed this week, including post-holiday days.
+    if weekly and old.get("date"):
+        old_week = pd.Timestamp(old["date"]).isocalendar()[:2]
+        this_week = pd.Timestamp(day).isocalendar()[:2]
+        if old_week == this_week:
+            return {**old, "date": day}, "HOLD TARGET (already reviewed this ISO week)"
+    # C: only consecutive NYSE sessions count toward three-session confirmation.
+    if not weekly and previous_session is not None and old.get("date") != previous_session:
+        old = {**old, "candidate": None, "streak": 0}
     advantage = float(rank.iloc[0] - rank[target])
     if leader == target or advantage < BUFFER:
         return {"target": target, "candidate": None, "streak": 0, "date": day}, "HOLD TARGET"
@@ -89,17 +97,46 @@ def transition(old: dict, rank: pd.Series, key: str, day: str, weekly: bool) -> 
 def fmt_top(s: pd.Series) -> str:
     return "\n".join(f"| {i} | {ticker} | {value:+.2f}% |" for i, (ticker, value) in enumerate(s.head(10).items(), 1))
 
+def completed_nyse_sessions() -> tuple[str, str]:
+    """Expected fully closed NYSE session and its predecessor (US/Eastern clock)."""
+    from zoneinfo import ZoneInfo
+    now = datetime.now(ZoneInfo("America/New_York"))
+    calendar = xcals.get_calendar("XNYS")
+    dates = calendar.sessions_in_range(
+        pd.Timestamp(now.date() - timedelta(days=14)),
+        pd.Timestamp(now.date()),
+    )
+    sessions = [str(session.date()) for session in dates]
+    # Ignore today's candles until after the closing auction and vendor updates.
+    if sessions and sessions[-1] == str(now.date()) and now.hour < 17:
+        sessions.pop()
+    if len(sessions) < 2:
+        raise RuntimeError("NYSE calendar returned insufficient complete sessions")
+    return sessions[-1], sessions[-2]
+
+
 def main():
     ROOT.mkdir(parents=True, exist_ok=True)
     members = universe()
     close = prices(members)
     ytd, rolling, day = rankings(close)
+    expected_day, previous_session = completed_nyse_sessions()
+    if day != expected_day:
+        raise RuntimeError(
+            f"Refusing stale or partial price snapshot: latest={day}, NYSE expected={expected_day}"
+        )
     if len(ytd) < 450 or len(rolling) < 400:
         raise RuntimeError(f"Too little usable coverage: YTD={len(ytd)}, rolling={len(rolling)}")
     previous = json.loads(STATE.read_text()) if STATE.exists() else {}
-    new_c, message_c = transition(previous.get("C", {}), ytd, "C", day, weekly=False)
+    new_c, message_c = transition(
+        previous.get("C", {}), ytd, "C", day, weekly=False, previous_session=previous_session
+    )
     new_d, message_d = transition(previous.get("D", {}), rolling, "D", day, weekly=True)
-    changed = any("TARGET CHANGE" in x for x in (message_c, message_d))
+    notify = any(
+        marker in message
+        for message in (message_c, message_d)
+        for marker in ("TARGET CHANGE", "INITIAL TARGET")
+    )
     previous.update({"C": new_c, "D": new_d, "asof": day, "universe_count": len(members)})
     STATE.write_text(json.dumps(previous, ensure_ascii=False, indent=2) + "\n")
     result = f"""# S&P 500 Champion Monitor — {day}
@@ -109,7 +146,7 @@ Research-only, **not** a buy/sell instruction. Signals are calculated after a co
 - Model allocation: **USD ${START_BALANCE:.0f} per strategy**, independent shadow portfolios; no trades have been simulated or executed.
 - Current membership: {len(members)} names. **Survivorship bias** applies to retrospective use; delisted names are missing.
 - C: YTD adjusted-price winner, 5 percentage-point lead, **3 consecutive qualifying trading sessions**. {message_c}. Tracking target: **{new_c['target']}**.
-- D: trailing 252-session adjusted-price winner, reviewed **Monday only**, 5 percentage-point lead. {message_d}. Tracking target: **{new_d['target']}**.
+- D: trailing 252-session adjusted-price winner, reviewed **once per US trading week**, 5 percentage-point lead. {message_d}. Tracking target: **{new_d['target']}**.
 - Do not infer profitability from changing targets. Initial TARGET does not imply you already hold the stock.
 
 ## C: YTD leaders
@@ -123,15 +160,27 @@ Research-only, **not** a buy/sell instruction. Signals are calculated after a co
 {fmt_top(rolling)}
 
 ## Data controls
-Yahoo Finance via yfinance is unofficial and may be delayed or revised. Prices use adjusted closes rather than tradeable entry fills. The index membership list is scraped from Wikipedia and may change. Failures stop the pipeline and do not generate a trade signal. Weekly Monday signal may be delayed by a US market holiday. No brokerage integration or tax/slippage calculation. The USD 200 allocation is a notional reference only.
+Yahoo Finance via yfinance is unofficial and may be delayed or revised. Prices use adjusted closes rather than tradeable entry fills. The index membership list is scraped from Wikipedia and may change. Failures stop the pipeline and do not generate a trade signal. Weekly D review uses the first successfully observed trading session of the ISO week. No brokerage integration or tax/slippage calculation. The USD 200 allocation is a notional reference only.
 """
     REPORT.write_text(result)
     print(result)
-    if changed:
-        # GitHub Actions creates an issue only for new changes; no auto-order.
+    if os.getenv("GITHUB_STEP_SUMMARY"):
+        with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as out:
+            out.write(result)
+    if notify:
+        # Initial target also produces a notification, but no trade is implied.
         import subprocess
-        title = f"Review champion target change — {day}"
-        subprocess.run(["gh", "issue", "create", "--title", title, "--body-file", str(REPORT)], check=False)
+        title = f"Review S&P 500 champion C/D signal — {day}"
+        check = subprocess.run(
+            ["gh", "issue", "list", "--state", "all", "--search", f'"{title}" in:title',
+             "--json", "title", "--limit", "100"],
+            capture_output=True, text=True, check=True,
+        )
+        if not any(item.get("title") == title for item in json.loads(check.stdout)):
+            subprocess.run(
+                ["gh", "issue", "create", "--title", title, "--body-file", str(REPORT)],
+                check=True,
+            )
 
 if __name__ == "__main__":
     main()
