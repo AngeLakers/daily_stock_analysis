@@ -29,6 +29,23 @@ class TransitionTests(unittest.TestCase):
         self.assertEqual(state["target"], "OLD")
         self.assertEqual(msg, "HOLD TARGET")
 
+    def test_c_skips_gap_in_market_scans(self):
+        rank = pd.Series([16.0, 8.0], index=["NEW", "OLD"])
+        old = {"target": "OLD", "candidate": "NEW", "streak": 2, "date": "2026-10-07"}
+        state, msg = transition(
+            old, rank, "C", "2026-10-09", False, previous_session="2026-10-08"
+        )
+        self.assertEqual(state["target"], "OLD")
+        self.assertEqual(state["streak"], 1)
+        self.assertIn("1/3", msg)
+
+    def test_d_catches_first_successful_scan_after_missed_monday(self):
+        rank = pd.Series([20.0, 9.0], index=["NEW", "OLD"])
+        old = {"target": "OLD", "date": "2026-10-09"}
+        state, msg = transition(old, rank, "D", "2026-10-13", True)
+        self.assertIn("TARGET CHANGE", msg)
+        self.assertEqual(state["target"], "NEW")
+
     def test_d_only_checks_mondays(self):
         rank = pd.Series([20.0, 9.0], index=["NEW", "OLD"])
         old = {"target": "OLD", "date": "2026-10-08"}
