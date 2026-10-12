@@ -1,0 +1,5 @@
+yfinance>=0.2.65,<2
+pandas>=2.2,<3
+requests>=2.31,<3
+lxml>=5,<7
+exchange_calendars>=4.7,<5
