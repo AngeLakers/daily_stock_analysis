@@ -1,4 +1,4 @@
-# S&P 500 Champion Monitor — 2026-10-13
+# S&P 500 Champion Monitor — 2026-10-14
 
 Research-only, **not** a buy/sell instruction. Signals are calculated after a completed US market session. A changed TARGET is **not a filled order**.
 
@@ -11,30 +11,30 @@ Research-only, **not** a buy/sell instruction. Signals are calculated after a co
 ## C: YTD leaders
 | Rank | Ticker | Adjusted return |
 |---:|---|---:|
-| 1 | MRNA | +633.30% |
-| 2 | SNDK | +524.45% |
-| 3 | DELL | +358.93% |
-| 4 | MU | +234.16% |
-| 5 | MRVL | +216.75% |
-| 6 | BE | +203.20% |
-| 7 | MPC | +196.70% |
-| 8 | HPE | +189.89% |
-| 9 | VLO | +184.55% |
-| 10 | AMD | +182.75% |
+| 1 | MRNA | +667.38% |
+| 2 | SNDK | +491.18% |
+| 3 | DELL | +307.19% |
+| 4 | MU | +220.47% |
+| 5 | MPC | +201.64% |
+| 6 | MRVL | +189.12% |
+| 7 | VLO | +186.62% |
+| 8 | BE | +175.45% |
+| 9 | AMD | +166.54% |
+| 10 | INTC | +165.91% |
 
 ## D: trailing 252-session leaders
 | Rank | Ticker | Adjusted return |
 |---:|---|---:|
-| 1 | SNDK | +1167.92% |
-| 2 | MRNA | +706.00% |
-| 3 | LITE | +560.38% |
-| 4 | MU | +425.40% |
-| 5 | DELL | +285.05% |
-| 6 | STX | +250.59% |
-| 7 | WDC | +230.46% |
-| 8 | MRVL | +214.42% |
-| 9 | BE | +203.27% |
-| 10 | VLO | +194.99% |
+| 1 | SNDK | +942.52% |
+| 2 | MRNA | +746.30% |
+| 3 | LITE | +458.25% |
+| 4 | MU | +374.67% |
+| 5 | DELL | +235.33% |
+| 6 | STX | +226.98% |
+| 7 | WDC | +206.90% |
+| 8 | VLO | +190.89% |
+| 9 | ILMN | +185.97% |
+| 10 | MRVL | +174.86% |
 
 ## Data controls
 Yahoo Finance via yfinance is unofficial and may be delayed or revised. Prices use adjusted closes rather than tradeable entry fills. The index membership list is scraped from Wikipedia and may change. Failures stop the pipeline and do not generate a trade signal. Weekly D review uses the first successfully observed trading session of the ISO week. No brokerage integration or tax/slippage calculation. The USD 200 allocation is a notional reference only.
