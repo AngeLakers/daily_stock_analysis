@@ -1,4 +1,4 @@
-# S&P 500 Champion Monitor — 2026-11-05
+# S&P 500 Champion Monitor — 2026-11-06
 
 Research-only, **not** a buy/sell instruction. Signals are calculated after a completed US market session. A changed TARGET is **not a filled order**.
 
@@ -11,30 +11,30 @@ Research-only, **not** a buy/sell instruction. Signals are calculated after a co
 ## C: YTD leaders
 | Rank | Ticker | Adjusted return |
 |---:|---|---:|
-| 1 | MRNA | +718.79% |
-| 2 | SNDK | +239.72% |
-| 3 | DELL | +154.41% |
-| 4 | MPC | +134.70% |
-| 5 | MU | +130.15% |
-| 6 | VLO | +118.95% |
-| 7 | OKTA | +97.94% |
-| 8 | PSX | +95.45% |
-| 9 | BE | +92.80% |
-| 10 | AMD | +88.83% |
+| 1 | MRNA | +761.95% |
+| 2 | SNDK | +251.78% |
+| 3 | DELL | +163.74% |
+| 4 | MU | +141.93% |
+| 5 | MPC | +131.86% |
+| 6 | VLO | +115.97% |
+| 7 | AMD | +109.68% |
+| 8 | BE | +99.38% |
+| 9 | OKTA | +95.09% |
+| 10 | PSX | +94.41% |
 
 ## D: trailing 252-session leaders
 | Rank | Ticker | Adjusted return |
 |---:|---|---:|
-| 1 | MRNA | +916.67% |
-| 2 | SNDK | +314.47% |
-| 3 | MU | +201.40% |
-| 4 | LITE | +170.60% |
-| 5 | VLO | +112.10% |
-| 6 | MPC | +108.74% |
-| 7 | DELL | +107.10% |
-| 8 | CNC | +105.40% |
-| 9 | APA | +102.46% |
-| 10 | OKTA | +96.80% |
+| 1 | MRNA | +978.90% |
+| 2 | SNDK | +285.71% |
+| 3 | MU | +190.86% |
+| 4 | LITE | +131.40% |
+| 5 | DELL | +117.83% |
+| 6 | APA | +111.94% |
+| 7 | VLO | +107.94% |
+| 8 | MPC | +103.55% |
+| 9 | CRL | +101.26% |
+| 10 | OKTA | +93.61% |
 
 ## Data controls
 Yahoo Finance via yfinance is unofficial and may be delayed or revised. Prices use adjusted closes rather than tradeable entry fills. The index membership list is scraped from Wikipedia and may change. Failures stop the pipeline and do not generate a trade signal. Weekly D review uses the first successfully observed trading session of the ISO week. No brokerage integration or tax/slippage calculation. The USD 200 allocation is a notional reference only.
